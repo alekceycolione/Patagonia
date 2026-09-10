@@ -59,6 +59,8 @@
         .anim-blur { opacity: 0; filter: blur(20px); transform: translateY(40px); }
         .anim-clip-up { clip-path: inset(100% 0 0 0); }
         .parallax-img { will-change: transform; }
+        #hero-image { will-change: transform, filter, opacity; transform: translateZ(0); }
+        #hero-video { will-change: contents; }
         /* Linha vertical da jornada */
         .journey-line {
             position: fixed;
@@ -105,11 +107,12 @@
     <!-- Container Principal do Scrollytelling (Altura estendida para permitir scrub para frente e para trás) -->
     <div id="hero-container" class="relative w-full h-screen overflow-hidden flex items-center justify-center bg-neutral-950">
         
-        <!-- Camada 1: A Foto de Abertura em Tela Cheia -->
+        <!-- Camada 1: Sequência de imagens (240 frames) scrubada pelo scroll -->
         <div id="hero-image" class="absolute inset-0 z-10 w-full h-full overflow-hidden shadow-2xl origin-center">
-            <img 
-                src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2000&q=80" 
-                alt="Patagônia Argentina - João Rock" 
+            <img
+                id="hero-frame"
+                src="src/img/frame_0001.jpg"
+                alt="Patagônia Argentina - João Rock"
                 class="w-full h-full object-cover"
             />
             <div class="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-black/30 to-black/30 flex flex-col justify-end p-8 md:p-16">
@@ -698,42 +701,85 @@
         gsap.set("#mosaic-layer", { opacity: 0, pointerEvents: "none" });
         gsap.set(".mosaic-item", { y: 120, opacity: 0, scale: 0.85 });
 
-        const tl = gsap.timeline({
-            scrollTrigger: {
-                trigger: "#hero-container",
-                start: "top top",
-                end: "+=2500", // Distância de scroll virtual para scrub suave
-                pin: true,      // Fixa o container principal durante a animação
-                scrub: 1,       // Acopla a timeline diretamente à rolagem do mouse (para frente e para trás)
-                anticipatePin: 1
-            }
-        });
+        // ============================================================== //
+        // HERO: sequência de 240 frames scrubada pelo scroll             //
+        // ============================================================== //
+        const heroFrame = document.getElementById("hero-frame");
+        const TOTAL_FRAMES = 240;
+        const FRAME_PATH = (n) => `src/img/frame_${String(n).padStart(4, "0")}.jpg`;
 
-        // Passo A: A foto de capa encolhe, ganha bordas arredondadas, escurece e desaparece
-        tl.to("#hero-image", {
-            scale: 0.45,
-            borderRadius: "24px",
-            filter: "brightness(0.7)",
-            opacity: 0,
-            y: -30,
-            ease: "power2.inOut",
-            duration: 1.5
-        })
-        // Passo B: O mosaico começa a aparecer quase imediatamente, eliminando o "vale negro"
-        .to("#mosaic-layer", {
-            opacity: 1,
-            pointerEvents: "auto",
-            duration: 1.0,
-            ease: "power1.out"
-        }, 0.1)
-        .to(".mosaic-item", {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            stagger: 0.08,
-            ease: "power3.out",
-            duration: 1.2
-        }, 0.2);
+        const preloaded = new Set();
+        function preloadFrame(n) {
+            if (preloaded.has(n)) return;
+            preloaded.add(n);
+            const img = new Image();
+            img.src = FRAME_PATH(n);
+        }
+        function preloadAround(currentIndex, range = 40) {
+            const from = Math.max(1, currentIndex - range);
+            const to = Math.min(TOTAL_FRAMES, currentIndex + range);
+            for (let i = from; i <= to; i++) preloadFrame(i);
+        }
+
+        let currentFrame = 1;
+        function setFrame(n) {
+            n = Math.max(1, Math.min(TOTAL_FRAMES, n));
+            if (n === currentFrame) return;
+            currentFrame = n;
+            heroFrame.src = FRAME_PATH(n);
+            preloadAround(n);
+        }
+
+        // Preload inicial: primeiros 80 frames
+        preloadAround(1, 80);
+
+        let heroTL = null;
+        function buildHeroAnimation() {
+            const dur = TOTAL_FRAMES / 24; // ~10s, mesma duração que o vídeo original
+
+            heroTL = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#hero-container",
+                    start: "top top",
+                    end: "+=6000",
+                    pin: true,
+                    scrub: 0.3,
+                    anticipatePin: 1
+                }
+            });
+
+            heroTL.to("#hero-image", {
+                scale: 0.75,
+                borderRadius: "20px",
+                filter: "brightness(0.8)",
+                opacity: 0,
+                y: -30,
+                ease: "power2.inOut",
+                duration: dur
+            })
+            .to("#mosaic-layer", {
+                opacity: 1,
+                pointerEvents: "auto",
+                duration: 3,
+                ease: "power1.out"
+            }, dur - 3)
+            .to(".mosaic-item", {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                stagger: 0.3,
+                ease: "power3.out",
+                duration: 3
+            }, dur - 3);
+
+            // Troca o frame conforme o progresso do scroll
+            heroTL.eventCallback("onUpdate", () => {
+                const frameIndex = Math.floor(heroTL.progress() * (TOTAL_FRAMES - 1)) + 1;
+                setFrame(frameIndex);
+            });
+        }
+
+        buildHeroAnimation();
 
         // ============================================================== //
         // ROTEIRO: animações variadas por card, parallax, journey line    //
