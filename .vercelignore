@@ -1,0 +1,18 @@
+# lixo / arquivos não usados pelo site
+quadro ideias patagonia.ai
+gemini-code-*.js
+gemini-code-*.css
+windows tool kcey.bat
+
+# metadados locais
+.DS_Store
+.agent/
+.node_modules.cache/
+
+# configs locais que não devem ir pra produção
+.git
+.gitignore
+.vercelignore
+
+# node_modules (Vercel já ignora por padrão, mas explicitando)
+node_modules/

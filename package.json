@@ -1,0 +1,26 @@
+{
+  "name": "patagonia-joao-rock",
+  "version": "1.0.0",
+  "description": "Site de portfólio e loja de João Rock para a expedição fotográfica Patagônia Argentina",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "build:css": "npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "patagonia",
+    "photography",
+    "joao-rock",
+    "scrollytelling",
+    "tailwindcss",
+    "gsap"
+  ],
+  "author": "João Rock",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

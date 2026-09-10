@@ -1,0 +1,17 @@
+node_modules/
+.DS_Store
+.env
+.env.local
+.vercel
+.vscode/
+.idea/
+
+# geradores locais não usados em produção
+quadro ideias patagonia.ai
+gemini-code-*.js
+gemini-code-*.css
+windows tool kcey.bat
+
+# metadados locais
+.agent/
+.playwright-cli/

@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="lenis lenis-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>João Rock | Patagônia Argentina</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230b0f19'/%3E%3Cpath d='M10 80 L35 35 L55 60 L75 25 L90 80 Z' fill='none' stroke='%23fbbf24' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='75' cy='25' r='4' fill='%23fbbf24'/%3E%3C/svg%3E">
+    
+    <!-- Tailwind CSS CDN para Estilização Ágil -->
+	<link href="./src/output.css" rel="stylesheet">    
+    <!-- Lenis Smooth Scroll CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.26/dist/lenis.css">
+
+    <style>
+        /* Ajustes finos de performance e reset */
+        body {
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+        }
+        /* Força aceleração de hardware nas imagens */
+        img {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        /* Roteiro: Tipografia editorial e estados iniciais das animações */
+        .font-display {
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: -0.03em;
+        }
+        .region-num {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: clamp(8rem, 18vw, 16rem);
+            line-height: 0.85;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(251, 191, 36, 0.25);
+            font-weight: 400;
+            user-select: none;
+        }
+        .reveal-word {
+            display: inline-block;
+            overflow: hidden;
+            vertical-align: bottom;
+        }
+        .reveal-word > span {
+            display: inline-block;
+            transform: translateY(110%);
+        }
+        /* Estados iniciais para varied reveals (GSAP vai animar para o estado final) */
+        .anim-fade-up { opacity: 0; transform: translateY(80px); }
+        .anim-slide-left { opacity: 0; transform: translateX(-120px); }
+        .anim-slide-right { opacity: 0; transform: translateX(120px); }
+        .anim-scale { opacity: 0; transform: scale(0.7); }
+        .anim-rotate { opacity: 0; transform: translateY(60px) rotate(2deg); }
+        .anim-mask { clip-path: inset(0 100% 0 0); }
+        .anim-mask-v { clip-path: inset(0 0 100% 0); }
+        .anim-blur { opacity: 0; filter: blur(20px); transform: translateY(40px); }
+        .anim-clip-up { clip-path: inset(100% 0 0 0); }
+        .parallax-img { will-change: transform; }
+        /* Linha vertical da jornada */
+        .journey-line {
+            position: fixed;
+            top: 0;
+            left: 32px;
+            width: 1px;
+            height: 100vh;
+            background: linear-gradient(to bottom, transparent 0%, rgba(251,191,36,0.4) 30%, rgba(251,191,36,0.4) 70%, transparent 100%);
+            z-index: 30;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .journey-line.visible { opacity: 1; }
+        /* Cards com aspect ratio consistente e bordas que "desenham" */
+        .dest-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            background: #0a0a0a;
+        }
+        .dest-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(251, 191, 36, 0.15);
+            border-radius: 1rem;
+            pointer-events: none;
+            transition: border-color 0.5s ease;
+        }
+        .dest-card:hover::after { border-color: rgba(251, 191, 36, 0.5); }
+        .dest-card .dest-img { transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .dest-card:hover .dest-img { transform: scale(1.06); }
+        /* Scroll indicator pulsante */
+        @keyframes scroll-pulse {
+            0%, 100% { transform: translateY(0); opacity: 0.5; }
+            50% { transform: translateY(8px); opacity: 1; }
+        }
+        .scroll-pulse { animation: scroll-pulse 1.8s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-neutral-950 text-white">
+
+    <!-- Container Principal do Scrollytelling (Altura estendida para permitir scrub para frente e para trás) -->
+    <div id="hero-container" class="relative w-full h-screen overflow-hidden flex items-center justify-center bg-neutral-950">
+        
+        <!-- Camada 1: A Foto de Abertura em Tela Cheia -->
+        <div id="hero-image" class="absolute inset-0 z-10 w-full h-full overflow-hidden shadow-2xl origin-center">
+            <img 
+                src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2000&q=80" 
+                alt="Patagônia Argentina - João Rock" 
+                class="w-full h-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-black/30 to-black/30 flex flex-col justify-end p-8 md:p-16">
+                <span class="text-amber-400 font-mono tracking-widest text-sm uppercase mb-2">Expedição Fotográfica</span>
+                <h1 class="text-4xl md:text-7xl font-bold tracking-tight text-white">PATAGÔNIA</h1>
+                <p class="text-neutral-300 text-lg md:text-xl max-w-xl mt-2">Por João Rock — Onde a imensidão da paisagem encontra a alma da fotografia.</p>
+                <p class="text-neutral-400 text-sm mt-4 animate-bounce">↓ Role para baixo para explorar o mosaico interativo</p>
+            </div>
+        </div>
+
+        <!-- Camada 2: Mosaico Colorido e Interativo (Revelado progressivamente na rolagem) -->
+        <div id="mosaic-layer" class="absolute inset-0 z-20 w-full h-full p-4 md:p-8 overflow-y-auto flex items-center justify-center opacity-0 pointer-events-none">
+            <div class="w-full max-w-7xl grid grid-cols-12 gap-3 md:gap-4 auto-rows-[140px] md:auto-rows-[180px] py-4">
+                
+                <!-- Item 1 (Grande) -->
+                <div class="mosaic-item col-span-12 md:col-span-8 row-span-2 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80" alt="Glaciar Perito Moreno" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-xl font-semibold">Glaciar Perito Moreno</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Edição Limitada & Livro</span>
+                    </div>
+                </div>
+
+                <!-- Item 2 (Pequeno) -->
+                <div class="mosaic-item col-span-6 md:col-span-4 row-span-1 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" alt="Fitz Roy Sunrise" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-lg font-semibold">Fitz Roy Sunrise</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Fine Art Print</span>
+                    </div>
+                </div>
+
+                <!-- Item 3 (Pequeno) -->
+                <div class="mosaic-item col-span-6 md:col-span-4 row-span-1 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80" alt="Torres del Paine" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-lg font-semibold">Torres del Paine</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Coleção Patagônia</span>
+                    </div>
+                </div>
+
+                <!-- Item 4 (Médio) -->
+                <div class="mosaic-item col-span-12 md:col-span-4 row-span-2 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80" alt="Estepa Patagônica" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-xl font-semibold">Estepa Patagônica</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Camisetas & Canecas</span>
+                    </div>
+                </div>
+
+                <!-- Item 5 (Médio) -->
+                <div class="mosaic-item col-span-12 md:col-span-8 row-span-1 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1510784722466-f2aa9c52fff6?auto=format&fit=crop&w=1200&q=80" alt="Ushuaia / Fim do Mundo" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-xl font-semibold">Ushuaia — Fim do Mundo</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Livro Fotográfico Vol. 1</span>
+                    </div>
+                </div>
+
+                <!-- Item 6 (Médio - completa linha abaixo de Ushuaia) -->
+                <div class="mosaic-item col-span-12 md:col-span-8 row-span-1 relative group overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1758736553564-488a2508dc1c?auto=format&fit=crop&w=1200&q=80" alt="Lago Nahuel Huapi" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-white text-xl font-semibold">Lago Nahuel Huapi</h3>
+                        <span class="text-amber-400 text-xs font-mono mt-1">Poster A2 & Cartões</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Seção de Continuação da Página (Para demonstrar a liberação do scroll após o efeito) -->
+
+    <!-- ============================================================== -->
+    <!-- O ROTEIRO — 5 capítulos, 13 destinos, animações variadas       -->
+    <!-- ============================================================== -->
+    <div class="journey-line" id="journey-line"></div>
+
+    <!-- INTRO DO ROTEIRO -->
+    <section id="roteiro-intro" class="relative w-full min-h-screen bg-neutral-950 flex flex-col items-center justify-center px-8 py-32 overflow-hidden">
+        <span class="text-amber-400 font-mono tracking-widest text-xs uppercase mb-6 anim-fade-up" style="transition-delay:0s">A Grande Jornada</span>
+        <h1 class="font-display text-5xl md:text-8xl lg:text-9xl text-center text-white leading-none anim-fade-up" style="transition-delay:.1s">
+            <span class="block" data-words>O</span>
+            <span class="block italic font-normal text-amber-400/80" data-words>Roteiro</span>
+        </h1>
+        <p class="text-neutral-400 text-base md:text-lg max-w-xl text-center mt-10 anim-fade-up" style="transition-delay:.3s">
+            Dos lagos andinos ao fim do mundo — cinco capítulos, treze destinos, uma viagem que muda a perspectiva de quem a faz.
+        </p>
+        <div class="mt-16 flex flex-col items-center gap-2 anim-fade-up" style="transition-delay:.5s">
+            <span class="text-neutral-500 font-mono text-xs tracking-widest uppercase">Continue rolando</span>
+            <svg class="w-5 h-5 text-amber-400 scroll-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+    </section>
+
+    <!-- REGIÃO 1: LAGOS ANDINOS -->
+    <section id="regiao-1" class="relative w-full min-h-screen bg-neutral-950 py-24 md:py-32 px-6 md:px-16 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-3 anim-slide-left">
+                    <span class="region-num">01</span>
+                </div>
+                <div class="col-span-12 md:col-span-9 anim-fade-up" style="transition-delay:.15s">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Capítulo I</span>
+                    <h2 class="font-display text-4xl md:text-6xl text-white mt-3 leading-tight">O Portão de Entrada</h2>
+                    <p class="text-neutral-400 text-lg mt-4 max-w-2xl">Antes da imensidão árida e selvagem da Patagônia profunda, a viagem começa em meio a vulcões, lagos de águas cristalinas e arquitetura alpina.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <!-- Card Bariloche (grande, à esquerda) -->
+                <article class="dest-card col-span-12 md:col-span-7 h-[420px] md:h-[560px] anim-mask" data-reveal="mask">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1637667168289-e89dfed09094?auto=format&fit=crop&w=1400&q=80" alt="Bariloche e a Rota dos Sete Lagos" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Argentina</span>
+                        <h3 class="font-display text-2xl md:text-4xl text-white mt-2">Bariloche e a Rota dos Sete Lagos</h3>
+                        <p class="text-neutral-300 text-sm md:text-base mt-3 max-w-md">O ponto de partida clássico na cordilheira. O Circuito Chico, os mirantes do Lago Nahuel Huapi e a estrada que sobe até San Martín de los Andes emoldurada por bosques de coihues e lagos azuis.</p>
+                    </div>
+                </article>
+                <!-- Cards direita -->
+                <div class="col-span-12 md:col-span-5 flex flex-col gap-4 md:gap-6">
+                    <article class="dest-card h-[200px] md:h-[270px] anim-slide-right">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1504642641925-1c733fb8e8e1?auto=format&fit=crop&w=1000&q=80" alt="O Tronador e o Glaciar Negro" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-5">
+                            <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Argentina · Chile</span>
+                            <h3 class="font-display text-xl md:text-2xl text-white mt-1">O Tronador e o Glaciar Negro</h3>
+                            <p class="text-neutral-300 text-xs md:text-sm mt-2">Uma geleira de gelo escuro encrustada na montanha, na fronteira dos parques nacionais.</p>
+                        </div>
+                    </article>
+                    <article class="dest-card h-[200px] md:h-[270px] anim-rotate" style="transition-delay:.2s">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1759357799192-cf50501c26d2?auto=format&fit=crop&w=1000&q=80" alt="Pucón e Puerto Varas" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-5">
+                            <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Chile</span>
+                            <h3 class="font-display text-xl md:text-2xl text-white mt-1">Pucón e Puerto Varas</h3>
+                            <p class="text-neutral-300 text-xs md:text-sm mt-2">Vulcões ativos como o Villarrica, os Saltos del Petrohué e marcas da colonização alemã.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGIÃO 2: PATAGÔNIA CENTRAL -->
+    <section id="regiao-2" class="relative w-full min-h-screen bg-neutral-900 py-24 md:py-32 px-6 md:px-16 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-9 order-2 md:order-1 anim-fade-up">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Capítulo II</span>
+                    <h2 class="font-display text-4xl md:text-6xl text-white mt-3 leading-tight">A Patagônia Central</h2>
+                    <p class="text-neutral-400 text-lg mt-4 max-w-2xl">Descendo rumo ao sul pela imensidão da estepe patagônica, a paisagem se abre em horizontes intermináveis chicoteados pelo vento.</p>
+                </div>
+                <div class="col-span-12 md:col-span-3 order-1 md:order-2 md:text-right anim-slide-right">
+                    <span class="region-num">02</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <article class="dest-card h-[360px] md:h-[480px] anim-clip-up">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1741269516075-afa74fbe0440?auto=format&fit=crop&w=900&q=80" alt="Península Valdés" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Costa Atlântica</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Península Valdés</h3>
+                        <p class="text-neutral-300 text-sm mt-2">Baleias-francas, elefantes-marinhos, pinguins e orcas — fauna marinha no litoral patagônico.</p>
+                    </div>
+                </article>
+                <article class="dest-card h-[360px] md:h-[480px] anim-mask-v" style="transition-delay:.15s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1635707109850-7e79332aa183?auto=format&fit=crop&w=900&q=80" alt="Cueva de las Manos" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Santa Cruz</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Cueva de las Manos</h3>
+                        <p class="text-neutral-300 text-sm mt-2">Pinturas rupestres com mais de 9.000 anos nos cânions do Rio Pinturas.</p>
+                    </div>
+                </article>
+                <article class="dest-card h-[360px] md:h-[480px] anim-scale" style="transition-delay:.3s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1753005922354-7b3cd292bfc9?auto=format&fit=crop&w=900&q=80" alt="Catedrais de Mármore" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Chile · Carretera Austral</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Catedrais de Mármore</h3>
+                        <p class="text-neutral-300 text-sm mt-2">Formações minerais esculpidas pelas águas azul-turquesa do Lago General Carrera.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGIÃO 3: SANTUÁRIO DO TREKKING -->
+    <section id="regiao-3" class="relative w-full min-h-screen bg-neutral-950 py-24 md:py-32 px-6 md:px-16 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-3 anim-slide-left">
+                    <span class="region-num">03</span>
+                </div>
+                <div class="col-span-12 md:col-span-9 anim-fade-up" style="transition-delay:.15s">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Capítulo III</span>
+                    <h2 class="font-display text-4xl md:text-6xl text-white mt-3 leading-tight">O Santuário do Trekking<br/>e do Gelo Gigante</h2>
+                    <p class="text-neutral-400 text-lg mt-4 max-w-2xl">A viagem entra na sua fase mais dramática, avistando as grandes paredes de granito e os mantos de gelo continental.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <article class="dest-card h-[480px] md:h-[640px] anim-mask">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1705506804933-d2f88b48d1e3?auto=format&fit=crop&w=1200&q=80" alt="El Chaltén" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Argentina · Santa Cruz</span>
+                        <h3 class="font-display text-3xl md:text-4xl text-white mt-2">El Chaltén</h3>
+                        <p class="text-neutral-300 text-base mt-3 max-w-md">Capital nacional do trekking. Base para trilhas mundialmente famosas aos pés dos imponentes Monte Fitz Roy e Cerro Torre.</p>
+                    </div>
+                </article>
+                <article class="dest-card h-[480px] md:h-[640px] anim-blur" style="transition-delay:.2s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80" alt="Glaciar Perito Moreno" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Argentina · El Calafate</span>
+                        <h3 class="font-display text-3xl md:text-4xl text-white mt-2">Glaciar Perito Moreno</h3>
+                        <p class="text-neutral-300 text-base mt-3 max-w-md">Uma parede de gelo com dezenas de metros de altura que avança sobre o Lago Argentino, famosa pelos estrondos dos blocos desabando na água.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGIÃO 4: CORDILHEIRA AUSTRAL E FIORDES -->
+    <section id="regiao-4" class="relative w-full min-h-screen bg-neutral-900 py-24 md:py-32 px-6 md:px-16 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-9 order-2 md:order-1 anim-fade-up">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Capítulo IV</span>
+                    <h2 class="font-display text-4xl md:text-6xl text-white mt-3 leading-tight">A Cordilheira Austral<br/>e os Fiordes</h2>
+                    <p class="text-neutral-400 text-lg mt-4 max-w-2xl">Cruzando para o lado chileno ou contornando rumo ao extremo sul, a geografia se fragmenta em fiordes profundos e ilhas labirínticas.</p>
+                </div>
+                <div class="col-span-12 md:col-span-3 order-1 md:order-2 md:text-right anim-slide-right">
+                    <span class="region-num">04</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <article class="dest-card col-span-12 md:col-span-8 h-[400px] md:h-[520px] anim-fade-up">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80" alt="Torres del Paine" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Chile · Magallanes</span>
+                        <h3 class="font-display text-2xl md:text-4xl text-white mt-2">Torres del Paine</h3>
+                        <p class="text-neutral-300 text-sm md:text-base mt-3 max-w-lg">A joia da coroa da Patagônia chilena. O maciço de Torres del Paine, os Cuernos, os lagos esmeralda e os circuitos lendários W e O.</p>
+                    </div>
+                </article>
+                <article class="dest-card col-span-12 md:col-span-4 h-[400px] md:h-[520px] anim-rotate" style="transition-delay:.15s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1574147669497-32e7403a2e47?auto=format&fit=crop&w=900&q=80" alt="Puerto Natales" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Chile</span>
+                        <h3 class="font-display text-2xl text-white mt-2">Puerto Natales</h3>
+                        <p class="text-neutral-300 text-sm mt-2">A porta de entrada para o Estreito de Magalhães e Punta Arenas, marcada pela história das grandes navegações.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGIÃO 5: FIM DO MUNDO (full-bleed dramático) -->
+    <section id="regiao-5" class="relative w-full min-h-screen py-24 md:py-32 px-6 md:px-16 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img class="parallax-img absolute inset-0 w-full h-full object-cover anim-mask-v" src="https://images.unsplash.com/photo-1552751753-0fc84ae5b6c8?auto=format&fit=crop&w=2000&q=80" alt="Estreito de Magalhães" />
+            <div class="absolute inset-0 bg-gradient-to-b from-neutral-950/80 via-neutral-950/40 to-neutral-950/95"></div>
+        </div>
+        <div class="relative z-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-3 anim-slide-left">
+                    <span class="region-num" style="-webkit-text-stroke-color: rgba(251,191,36,0.5)">05</span>
+                </div>
+                <div class="col-span-12 md:col-span-9 anim-fade-up" style="transition-delay:.15s">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Capítulo V</span>
+                    <h2 class="font-display text-5xl md:text-7xl text-white mt-3 leading-none">O Fim do Mundo</h2>
+                    <p class="text-neutral-300 text-lg mt-4 max-w-2xl">A etapa final da jornada, onde a América do Sul se fragmenta e mergulha no Oceano Antártico.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <article class="dest-card h-[340px] md:h-[440px] anim-mask">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=900&q=80" alt="Parque Nacional Tierra del Fuego" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Argentina</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Tierra del Fuego</h3>
+                        <p class="text-neutral-300 text-sm mt-2">Onde a Rota 40 termina. Florestas subantárticas encontram o mar em baías profundas.</p>
+                    </div>
+                </article>
+                <article class="dest-card h-[340px] md:h-[440px] anim-slide-left" style="transition-delay:.1s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1737502860412-50c77ed5e84b?auto=format&fit=crop&w=900&q=80" alt="Canal de Beagle" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Ushuaia</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Canal de Beagle</h3>
+                        <p class="text-neutral-300 text-sm mt-2">A cidade mais ao sul do planeta. O Farol Les Eclaireurs e o arquipélago da Antártica logo adiante.</p>
+                    </div>
+                </article>
+                <article class="dest-card h-[340px] md:h-[440px] anim-scale" style="transition-delay:.2s">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1552751753-0fc84ae5b6c8?auto=format&fit=crop&w=900&q=80" alt="Travessia do Estreito de Magalhães" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <span class="text-amber-400 font-mono text-xs tracking-widest uppercase">Travessia</span>
+                        <h3 class="font-display text-xl md:text-2xl text-white mt-2">Estreito de Magalhães</h3>
+                        <p class="text-neutral-300 text-sm mt-2">A entrada na Ilha Grande da Terra do Fogo, cruzando paisagens que lembram tundras nórdicas.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="w-full min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-8 text-center border-t border-neutral-800">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4">O Projeto Global</h2>
+        <p class="text-neutral-400 max-w-2xl text-lg mb-8">Além do livro fotográfico decole com as peças exclusivas de vestuário e colecionáveis inspiradas nas expedições de João Rock.</p>
+        <button class="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl transition-colors shadow-lg">
+            Garantir Meu exemplar & Brindes
+        </button>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- LOJA — livro + souvenirs (caneca, camiseta, boné, etc.)         -->
+    <!-- ============================================================== -->
+    <section id="loja" class="relative w-full bg-neutral-950 py-24 md:py-32 px-6 md:px-16 overflow-hidden border-t border-neutral-900">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Cabeçalho -->
+            <div class="grid grid-cols-12 gap-4 md:gap-8 items-end mb-16">
+                <div class="col-span-12 md:col-span-3 anim-slide-left">
+                    <span class="font-display text-5xl md:text-7xl text-amber-400/80 italic leading-none">Loja</span>
+                </div>
+                <div class="col-span-12 md:col-span-9 anim-fade-up" style="transition-delay:.15s">
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Souvenirs & Coleção</span>
+                    <h2 class="font-display text-4xl md:text-6xl text-white mt-3 leading-tight">Leve a Patagônia<br/>para sua casa</h2>
+                    <p class="text-neutral-400 text-lg mt-4 max-w-2xl">O livro de estreia, peças de vestuário, canecas, posters e objetos — todos numerados e com curadoria de João Rock.</p>
+                </div>
+            </div>
+
+            <!-- LIVRO EM DESTAQUE -->
+            <article class="dest-card grid grid-cols-1 md:grid-cols-12 gap-0 mb-16 md:mb-20 anim-mask">
+                <!-- Capa do livro -->
+                <div class="col-span-1 md:col-span-5 relative h-[460px] md:h-[560px] bg-black overflow-hidden">
+                    <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80" alt="Capa do Livro Fotográfico" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30"></div>
+                    <!-- "Capa" estilizada -->
+                    <div class="absolute inset-0 flex flex-col justify-between p-8">
+                        <div class="flex items-start justify-between">
+                            <span class="text-amber-400 font-mono text-xs tracking-widest">EDIÇÃO LIMITADA</span>
+                            <span class="text-white/80 font-mono text-xs border border-white/30 rounded-full px-2 py-1">VOL. 01</span>
+                        </div>
+                        <div>
+                            <p class="text-amber-400 font-mono text-xs tracking-widest mb-2">JOÃO ROCK</p>
+                            <h3 class="font-display text-5xl md:text-6xl text-white leading-none">Patagônia</h3>
+                            <p class="text-neutral-300 text-sm mt-2 max-w-xs">120 páginas · 86 fotografias · Capa dura</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Detalhes do livro -->
+                <div class="col-span-1 md:col-span-7 p-8 md:p-12 flex flex-col justify-center bg-neutral-900">
+                    <span class="inline-flex items-center gap-2 text-xs font-mono tracking-widest uppercase text-amber-400 mb-4">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        Best Seller · 1ª Edição
+                    </span>
+                    <h3 class="font-display text-3xl md:text-4xl text-white">O livro das expedições</h3>
+                    <p class="text-neutral-400 text-base md:text-lg mt-4 leading-relaxed">
+                        Uma viagem visual pela Patagônia profunda — dos lagos andinos ao fim do mundo. Curadoria, sequência narrativa e impressão premium. Cada exemplar é numerado à mão.
+                    </p>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-6 text-sm text-neutral-300">
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> Capa dura com laminação fosca</li>
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> Papel couché 150g/m²</li>
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> 86 fotografias selecionadas</li>
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> Tiragem numerada (1.000 un.)</li>
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> Texto bilíngue PT/EN</li>
+                        <li class="flex items-center gap-2"><span class="text-amber-400">✓</span> Frete grátis Brasil</li>
+                    </ul>
+                    <div class="flex flex-wrap items-end gap-6 mt-8">
+                        <div>
+                            <p class="text-neutral-500 font-mono text-xs tracking-widest uppercase">A partir de</p>
+                            <p class="font-display text-4xl text-white mt-1">R$ 249<span class="text-xl text-neutral-400">,00</span></p>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs font-mono text-amber-400/80">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                            327 exemplares restantes
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <button class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl transition-colors shadow-lg">
+                            Comprar livro
+                        </button>
+                        <button class="px-6 py-3 bg-transparent border border-neutral-700 hover:border-amber-400/60 text-white font-medium rounded-xl transition-colors">
+                            Ver preview
+                        </button>
+                    </div>
+                </div>
+            </article>
+
+            <!-- TÍTULO — MAIS PRODUTOS -->
+            <div class="flex items-end justify-between mb-8 anim-fade-up">
+                <div>
+                    <span class="text-amber-400 font-mono tracking-widest text-xs uppercase">Catálogo</span>
+                    <h3 class="font-display text-3xl md:text-4xl text-white mt-2">Mais souvenirs</h3>
+                </div>
+                <p class="hidden md:block text-neutral-500 text-sm font-mono">6 produtos · Impressão sob demanda</p>
+            </div>
+
+            <!-- GRADE DE PRODUTOS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+
+                <!-- Caneca -->
+                <article class="dest-card group anim-fade-up" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80" alt="Caneca Estepa Patagônica" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Caneca</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">★ 4.9</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Caneca Estepa</h4>
+                        <p class="text-neutral-500 text-xs mt-1">Cerâmica 350ml · Impressão wraparound</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 79<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Camiseta -->
+                <article class="dest-card group anim-scale" style="transition-delay:.1s" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80" alt="Camiseta Fitz Roy" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Camiseta</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">P · M · G · GG</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Camiseta Fitz Roy</h4>
+                        <p class="text-neutral-500 text-xs mt-1">Algodão peruano · Estampa serigráfica</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 129<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Boné -->
+                <article class="dest-card group anim-rotate" style="transition-delay:.2s" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=900&q=80" alt="Boné Perito Moreno" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Boné</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">Ajustável</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Boné Perito Moreno</h4>
+                        <p class="text-neutral-500 text-xs mt-1">Patch bordado · Aba curva</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 99<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Poster A2 -->
+                <article class="dest-card group anim-slide-left" style="transition-delay:.05s" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=900&q=80" alt="Poster A2 Torres del Paine" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Poster A2</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">42 × 59 cm</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Poster Torres del Paine</h4>
+                        <p class="text-neutral-500 text-xs mt-1">Impressão Fine Art · Hahnemühle 308gsm</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 149<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Kit Cartões Postais -->
+                <article class="dest-card group anim-slide-right" style="transition-delay:.15s" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80" alt="Kit 12 Cartões Postais" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Cartões</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">12 unidades</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Kit 12 Cartões Postais</h4>
+                        <p class="text-neutral-500 text-xs mt-1">Coleção Patagônia · Papel texturizado</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 49<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Calendário -->
+                <article class="dest-card group anim-blur" style="transition-delay:.25s" data-product>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-t-2xl">
+                        <img class="dest-img parallax-img absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1552751753-0fc84ae5b6c8?auto=format&fit=crop&w=900&q=80" alt="Calendário 2026" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-3 left-3 text-amber-400 font-mono text-[10px] tracking-widest uppercase bg-neutral-950/80 backdrop-blur-sm px-2 py-1 rounded">Calendário</span>
+                        <span class="absolute top-3 right-3 text-white/70 font-mono text-[10px] tracking-widest uppercase">2026</span>
+                    </div>
+                    <div class="p-5 bg-neutral-900 rounded-b-2xl">
+                        <h4 class="font-display text-xl text-white">Calendário 2026</h4>
+                        <p class="text-neutral-500 text-xs mt-1">12 fotografias · Mesa ou parede</p>
+                        <div class="flex items-center justify-between mt-4">
+                            <p class="font-display text-2xl text-white">R$ 89<span class="text-sm text-neutral-400">,00</span></p>
+                            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-sm font-bold rounded-lg transition-colors">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+
+            <!-- Rodapé da loja — info de envio -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-16 pt-12 border-t border-neutral-900 anim-fade-up">
+                <div class="flex items-start gap-4">
+                    <span class="text-amber-400 text-2xl font-display">01</span>
+                    <div>
+                        <h5 class="text-white font-medium">Frete grátis Brasil</h5>
+                        <p class="text-neutral-500 text-sm mt-1">Para compras acima de R$ 150. Entrega em 5–10 dias úteis.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="text-amber-400 text-2xl font-display">02</span>
+                    <div>
+                        <h5 class="text-white font-medium">Embalagem protegida</h5>
+                        <p class="text-neutral-500 text-sm mt-1">Caixa rígida e plastificada. Prints e livros vão planos, canecas com espuma.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <span class="text-amber-400 text-2xl font-display">03</span>
+                    <div>
+                        <h5 class="text-white font-medium">Pagamento seguro</h5>
+                        <p class="text-neutral-500 text-sm mt-1">Pix, cartão (até 3x sem juros) e boleto. SSL em todo o site.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CDNs do GSAP, ScrollTrigger e Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.3.26/dist/lenis.min.js"></script>
+
+    <script>
+        // Registro dos plugins do GSAP
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. Inicialização do Lenis Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true,
+        });
+
+        // Sincronização rigorosa do Lenis com o ScrollTrigger do GSAP
+        lenis.on('scroll', ScrollTrigger.update);
+
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+
+        gsap.ticker.lagSmoothing(0);
+
+        // 2. Motor de Animação Scrollytelling Bidirecional
+        // Garante estado inicial correto antes do scroll (evita brightness(0) no load)
+        gsap.set("#hero-image", { filter: "brightness(1)", borderRadius: 0, opacity: 1 });
+        gsap.set("#mosaic-layer", { opacity: 0, pointerEvents: "none" });
+        gsap.set(".mosaic-item", { y: 120, opacity: 0, scale: 0.85 });
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#hero-container",
+                start: "top top",
+                end: "+=2500", // Distância de scroll virtual para scrub suave
+                pin: true,      // Fixa o container principal durante a animação
+                scrub: 1,       // Acopla a timeline diretamente à rolagem do mouse (para frente e para trás)
+                anticipatePin: 1
+            }
+        });
+
+        // Passo A: A foto de capa encolhe, ganha bordas arredondadas, escurece e desaparece
+        tl.to("#hero-image", {
+            scale: 0.45,
+            borderRadius: "24px",
+            filter: "brightness(0.7)",
+            opacity: 0,
+            y: -30,
+            ease: "power2.inOut",
+            duration: 1.5
+        })
+        // Passo B: O mosaico começa a aparecer quase imediatamente, eliminando o "vale negro"
+        .to("#mosaic-layer", {
+            opacity: 1,
+            pointerEvents: "auto",
+            duration: 1.0,
+            ease: "power1.out"
+        }, 0.1)
+        .to(".mosaic-item", {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            stagger: 0.08,
+            ease: "power3.out",
+            duration: 1.2
+        }, 0.2);
+
+        // ============================================================== //
+        // ROTEIRO: animações variadas por card, parallax, journey line    //
+        // ============================================================== //
+
+        // Estado inicial: garante que as transições CSS não sejam usadas (controlamos via GSAP)
+        gsap.set(".anim-fade-up, .anim-slide-left, .anim-slide-right, .anim-scale, .anim-rotate, .anim-mask, .anim-mask-v, .anim-blur, .anim-clip-up", { clearProps: "all" });
+
+        // Helper: aplica a animação certa baseado na classe
+        function revealCard(el) {
+            if (el._revealed) return;
+            el._revealed = true;
+
+            if (el.classList.contains("anim-fade-up")) {
+                gsap.fromTo(el, { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
+            } else if (el.classList.contains("anim-slide-left")) {
+                gsap.fromTo(el, { opacity: 0, x: -120 }, { opacity: 1, x: 0, duration: 1.1, ease: "power3.out" });
+            } else if (el.classList.contains("anim-slide-right")) {
+                gsap.fromTo(el, { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 1.1, ease: "power3.out" });
+            } else if (el.classList.contains("anim-scale")) {
+                gsap.fromTo(el, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 1.2, ease: "back.out(1.2)" });
+            } else if (el.classList.contains("anim-rotate")) {
+                gsap.fromTo(el, { opacity: 0, y: 60, rotation: 2 }, { opacity: 1, y: 0, rotation: 0, duration: 1.2, ease: "power3.out" });
+            } else if (el.classList.contains("anim-mask")) {
+                gsap.fromTo(el, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.4, ease: "power4.out" });
+            } else if (el.classList.contains("anim-mask-v")) {
+                gsap.fromTo(el, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 1.4, ease: "power4.out" });
+            } else if (el.classList.contains("anim-blur")) {
+                gsap.fromTo(el, { opacity: 0, filter: "blur(20px)", y: 40 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 1.4, ease: "power2.out" });
+            } else if (el.classList.contains("anim-clip-up")) {
+                gsap.fromTo(el, { clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0% 0 0 0)", duration: 1.3, ease: "power4.out" });
+            }
+        }
+
+        // Dispara cada card quando entra no viewport (com margem generosa para "preparar" o scroll)
+        const revealTargets = document.querySelectorAll(
+            "#roteiro-intro .anim-fade-up, #regiao-1 [class*='anim-'], #regiao-2 [class*='anim-'], #regiao-3 [class*='anim-'], #regiao-4 [class*='anim-'], #regiao-5 [class*='anim-'], #loja [class*='anim-']"
+        );
+        revealTargets.forEach((el) => {
+            ScrollTrigger.create({
+                trigger: el,
+                start: "top 92%",
+                once: true,
+                onEnter: () => revealCard(el),
+            });
+        });
+
+        // Reveal palavra-por-palavra no título "O Roteiro"
+        document.querySelectorAll("[data-words]").forEach((el) => {
+            const text = el.textContent.trim();
+            el.innerHTML = text.split(" ").map(w => `<span class="reveal-word"><span>${w}</span></span>`).join(" ");
+            const spans = el.querySelectorAll(".reveal-word > span");
+            // Usa pixels (y) em vez de yPercent porque o CSS translateY(110%) é lido pelo GSAP como y em px
+            gsap.fromTo(spans,
+                { y: (i, el) => el.offsetHeight * 1.1 },
+                {
+                    y: 0,
+                    duration: 1,
+                    ease: "power4.out",
+                    stagger: 0.12,
+                    scrollTrigger: {
+                        trigger: el,
+                        start: "top 90%",
+                        once: true,
+                    }
+                }
+            );
+        });
+
+        // Parallax das imagens (mais sutil nas seções, mais forte nas cards)
+        gsap.utils.toArray(".parallax-img").forEach((img) => {
+            gsap.fromTo(img, { yPercent: -8 }, {
+                yPercent: 8,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: img,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true,
+                }
+            });
+        });
+
+        // Background do Regiao 5 com parallax mais lento (sensação de profundidade)
+        const regiao5Bg = document.querySelector("#regiao-5 > div:first-child > img");
+        if (regiao5Bg) {
+            gsap.fromTo(regiao5Bg, { yPercent: -15, scale: 1.1 }, {
+                yPercent: 15,
+                ease: "none",
+                scrollTrigger: { trigger: "#regiao-5", start: "top bottom", end: "bottom top", scrub: true }
+            });
+        }
+
+        // Linha vertical da jornada: aparece quando entra no roteiro, some no final
+        const journeyLine = document.getElementById("journey-line");
+        ScrollTrigger.create({
+            trigger: "#roteiro-intro",
+            start: "top 60%",
+            endTrigger: "#regiao-5",
+            end: "bottom bottom",
+            onEnter: () => journeyLine.classList.add("visible"),
+            onLeave: () => journeyLine.classList.remove("visible"),
+            onEnterBack: () => journeyLine.classList.add("visible"),
+            onLeaveBack: () => journeyLine.classList.remove("visible"),
+        });
+
+        // Loja: feedback visual nos botões "Adicionar"
+        document.querySelectorAll('#loja [data-product] button').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const original = btn.textContent;
+                btn.textContent = '✓ Adicionado';
+                btn.classList.add('!bg-emerald-500');
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('!bg-emerald-500');
+                }, 1400);
+            });
+        });
+    </script>
+</body>
+</html>
